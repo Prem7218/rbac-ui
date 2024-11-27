@@ -7,20 +7,45 @@ import "../App.css";
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
 
+  const getUsers = async () => {
+    try {
+      const res = await fetchUsers();
+      setUsers(res.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
   useEffect(() => {
-    fetchUsers()
-      .then((res) => setUsers(res.data))
-      .catch((error) => console.error("Error fetching users:", error));
+    getUsers();
   }, []);
 
-  const handleAdd = (user) =>
-    addUser(user).then(() => fetchUsers().then((res) => setUsers(res.data)));
+  const handleAdd = async (user) => {
+    try {
+      await addUser(user);
+      getUsers();
+    } catch (error) {
+      console.error("Error adding user:", error);
+    }
+  };
 
-  const handleEdit = (id, user) =>
-    updateUser(id, user).then(() => fetchUsers().then((res) => setUsers(res.data)));
+  const handleEdit = async (id, user) => {
+    try {
+      await updateUser(id, user);
+      getUsers();
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
 
-  const handleDelete = (id) =>
-    deleteUser(id).then(() => fetchUsers().then((res) => setUsers(res.data)));
+  const handleDelete = async (id) => {
+    try {
+      await deleteUser(id);
+      getUsers();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
 
   return (
     <div className="bg-cover-custom py-12 px-6">

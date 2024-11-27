@@ -4,8 +4,8 @@
 ## [*] Create Using: React JS, Java-Script, Mock API
 
 # [*] We Use 2 Diff Server For Mock Data Running: 
-    (1) Roles [3001] json-server --watch db.json --port 3001, 
-    (2) Users [3000] json-server --watch db.json --port 3000
+    (1) Roles [3001] json-server --watch db.json --port 3001 -- no-cors
+    (2) Users [3000] json-server --watch db.json --port 3000 -- no-cors
 
 # [*] and React localhost://5173 [npm run dev]
 

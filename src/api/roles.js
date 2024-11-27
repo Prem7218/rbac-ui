@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3001/roles";
+const API_URL = "https://maddening-agreeable-slayer.glitch.me/roles";
 
 export const fetchRoles = () => axios.get(API_URL);
 export const addRole = (role) => axios.post(API_URL, role);

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3001/users";
+const API_URL = "https://maddening-agreeable-slayer.glitch.me/users";
 
 export const fetchUsers = () => axios.get(API_URL);
 export const addUser = (user) => axios.post(API_URL, user);

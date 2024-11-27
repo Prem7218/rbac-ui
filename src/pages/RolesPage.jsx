@@ -15,33 +15,35 @@ const RolesPage = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
-    fetchRoles()
-      .then((res) => {
-        setRoles(res.data);
-      })
-      .catch((error) => console.error("Error fetching roles:", error));
+  const getRolesAndUsers = async () => {
+    try {
+      const rolesResponse = await fetchRoles();
+      const usersResponse = await fetchUsers();
+      setRoles(rolesResponse.data);
+      setUsers(usersResponse.data);
+    } catch (error) {
+      console.error("Error fetching roles or users:", error);
+    }
+  };
 
-    fetchUsers()
-      .then((res) => setUsers(res.data))
-      .catch((error) => console.error("Error fetching users:", error));
+  useEffect(() => {
+    getRolesAndUsers();
   }, []);
 
-  const handleAdd = (role) => {
-    addRole(role)
-      .then(() => {
-        fetchRoles().then((res) => {
-          setRoles(res.data);
-        });
-      })
-      .catch((error) => console.error("Error adding role:", error));
+  const handleAdd = async (role) => {
+    try {
+      await addRole(role);
+      getRolesAndUsers();
+    } catch (error) {
+      console.error("Error adding role:", error);
+    }
   };
 
   const handleEdit = (role) => {
     setCurrentRole(role);
   };
 
-  const handleSave = (role, roleId) => {
+  const handleSave = async (role, roleId) => {
     if (!selectedUser) {
       alert("Please select a user before creating the role.");
       return;
@@ -49,37 +51,34 @@ const RolesPage = () => {
 
     const existingRole = roles.find((r) => r.userId === selectedUser.id);
 
-    if (existingRole) {
-      updateRole(existingRole.id, role)
-        .then(() => {
-          setRoles((prevRoles) =>
-            prevRoles.map((r) =>
-              r.userId === selectedUser.id ? { ...r, ...role } : r
-            )
-          );
-        })
-        .catch((error) => console.error("Error updating role:", error));
-    } else {
-      addRole({ ...role, userId: selectedUser.id })
-        .then(() => {
-          fetchRoles().then((res) => {
-            setRoles(res.data);
-          });
-        })
-        .catch((error) => console.error("Error adding role:", error));
+    try {
+      if (existingRole) {
+        await updateRole(existingRole.id, role);
+        setRoles((prevRoles) =>
+          prevRoles.map((r) =>
+            r.userId === selectedUser.id ? { ...r, ...role } : r
+          )
+        );
+      } else {
+        await addRole({ ...role, userId: selectedUser.id });
+      }
+      getRolesAndUsers();
+    } catch (error) {
+      console.error("Error saving role:", error);
     }
 
     setCurrentRole(null);
     setSelectedUser(null);
   };
 
-  const handleDelete = (roleId) => {
+  const handleDelete = async (roleId) => {
     if (window.confirm("Are you sure you want to delete this role?")) {
-      apiDeleteRole(roleId)
-        .then(() => {
-          setRoles(roles.filter((role) => role.id !== roleId));
-        })
-        .catch((error) => console.error("Error deleting role:", error));
+      try {
+        await apiDeleteRole(roleId);
+        setRoles(roles.filter((role) => role.id !== roleId));
+      } catch (error) {
+        console.error("Error deleting role:", error);
+      }
     }
   };
 
