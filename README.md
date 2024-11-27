@@ -6,10 +6,13 @@
 ## [*] Create Using: React JS, Java-Script, Mock API
 
 # [*] We Use Server For Mock Data Running: 
-    (1) Roles [3001] json-server --watch db.json --port 3001 -- no-cors
-    (2) Users [3000] json-server --watch db.json --port 3001 -- no-cors
+    (1) Roles [3001] json-server --watch db.json --port 3001
+    (2) Users [3001] json-server --watch db.json --port 3001
 
 # [*] and React localhost://5173 [npm run dev]
+
+# [Hosting]: 1) Vercel & Render [ Frontend (React JS) ]....
+# [Hosting]: 2) Glitch for [ Mock [ API Data ]....
 
 ## [*] Folder Structure: rbac-ui/
 
