@@ -7,28 +7,70 @@ import {
 } from "../api/roles";
 import { fetchUsers } from "../api/users";
 import RoleForm from "../components/RoleForm";
+import Spinner from "../components/LoadingSpinner";
 import "../App.css";
 
 const RolesPage = () => {
   const [roles, setRoles] = useState([]);
-  const [currentRole, setCurrentRole] = useState(null);
   const [users, setUsers] = useState([]);
+  const [currentRole, setCurrentRole] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [sortField, setSortField] = useState("user"); // Default sort field
+  const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
 
   const getRolesAndUsers = async () => {
+    setIsLoading(true);
+    setError("");
     try {
-      const rolesResponse = await fetchRoles();
-      const usersResponse = await fetchUsers();
+      const [rolesResponse, usersResponse] = await Promise.all([
+        fetchRoles(),
+        fetchUsers(),
+      ]);
       setRoles(rolesResponse.data);
       setUsers(usersResponse.data);
-    } catch (error) {
-      console.error("Error fetching roles or users:", error);
+    } catch (err) {
+      setError("Failed to fetch roles or users. Please try again later.");
+      console.error("Error fetching data:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     getRolesAndUsers();
   }, []);
+
+  // Sorting functionality
+  const handleSort = (field) => {
+    const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortOrder(order);
+
+    const sortedRoles = [...roles].sort((a, b) => {
+      let aValue, bValue;
+
+      if (field === "user") {
+        const userA = users.find((user) => user.id === a.userId);
+        const userB = users.find((user) => user.id === b.userId);
+        aValue = userA?.name || "";
+        bValue = userB?.name || "";
+      } else {
+        aValue = a[field];
+        bValue = b[field];
+      }
+
+      if (typeof aValue === "string") {
+        return order === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      return order === "asc" ? aValue - bValue : bValue - aValue;
+    });
+
+    setRoles(sortedRoles);
+  };
 
   const handleAdd = async (role) => {
     try {
@@ -86,8 +128,10 @@ const RolesPage = () => {
     <div className="p-6 space-y-8 bg-custom">
       <h2 className="text-3xl font-semibold text-center text-white">Manage Roles</h2>
 
-      {/* Role Form */}
-      <div className="bg-white p-6 rounded-lg shadow-md transition-all duration-300">
+      {isLoading && <Spinner />}
+      {error && <div className="text-red-500">{error}</div>}
+
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <RoleForm
           onSubmit={handleSave}
           initialData={currentRole}
@@ -96,13 +140,12 @@ const RolesPage = () => {
         />
       </div>
 
-      {/* Display Users */}
       <div className="my-6">
         <h3 className="text-2xl font-semibold text-white">Users</h3>
         <div className="mb-4">
           <label className="block text-lg font-medium text-white">Select User:</label>
           <select
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            className="w-full p-3 border border-gray-300 rounded-md"
             value={selectedUser?.id || ""}
             onChange={(e) => {
               const userId = e.target.value;
@@ -120,16 +163,30 @@ const RolesPage = () => {
         </div>
       </div>
 
-      {/* Current Roles */}
       <div className="my-6 overflow-hidden">
         <h3 className="text-2xl font-semibold text-white">Current Roles</h3>
         <div className="overflow-x-auto bg-white p-4 rounded-lg shadow-md mt-4">
           <table className="min-w-full table-auto border-collapse border border-gray-300">
             <thead className="bg-gray-200 text-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left">User</th>
-                <th className="px-6 py-3 text-left">Role</th>
-                <th className="px-6 py-3 text-left">Permissions</th>
+                <th
+                  className="px-6 py-3 text-left cursor-pointer"
+                  onClick={() => handleSort("user")}
+                >
+                  User {sortField === "user" && (sortOrder === "asc" ? "↑" : "↓")}
+                </th>
+                <th
+                  className="px-6 py-3 text-left cursor-pointer"
+                  onClick={() => handleSort("name")}
+                >
+                  Role {sortField === "name" && (sortOrder === "asc" ? "↑" : "↓")}
+                </th>
+                <th
+                  className="px-6 py-3 text-left cursor-pointer"
+                  onClick={() => handleSort("permissions")}
+                >
+                  Permissions {sortField === "permissions" && (sortOrder === "asc" ? "↑" : "↓")}
+                </th>
                 <th className="px-6 py-3 text-left">Actions</th>
               </tr>
             </thead>
@@ -138,10 +195,7 @@ const RolesPage = () => {
                 roles.map((role) => {
                   const user = users.find((user) => user.id === role.userId);
                   return (
-                    <tr
-                      key={role.id}
-                      className="hover:bg-gray-100 transition-all duration-300 hover:scale-95"
-                    >
+                    <tr key={role.id} className="hover:bg-gray-100 transition-all duration-300">
                       <td className="px-6 py-4">{user?.name || "Unknown User"}</td>
                       <td className="px-6 py-4">{role.name || "Unknown Role"}</td>
                       <td className="px-6 py-4">{role.permissions.join(", ")}</td>
